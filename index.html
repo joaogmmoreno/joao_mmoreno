@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extrator de NF — ZPL</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0f1117;
+    --surface: #181c27;
+    --border:  #2a2f42;
+    --accent:  #4f8ef7;
+    --accent2: #7c3aed;
+    --text:    #e8eaf0;
+    --muted:   #6b7280;
+    --success: #22c55e;
+    --error:   #ef4444;
+    --mono:    'JetBrains Mono','Fira Mono',monospace;
+    --sans:    'Inter',system-ui,sans-serif;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+  }
+  header { width:100%; max-width:960px; margin-bottom:32px; }
+  .eyebrow { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  h1 { font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+  h1 span { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .subtitle { margin-top:8px; font-size:14px; color:var(--muted); }
+
+  .grid { width:100%; max-width:960px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:680px){ .grid{ grid-template-columns:1fr; } }
+
+  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; }
+  .panel-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+  .header-count { margin-left:auto; font-size:12px; font-weight:700; color:var(--accent); font-family:var(--mono); opacity:0; transition:opacity .3s; }
+  .header-count.visible { opacity:1; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .dot.green { background:var(--success); }
+
+  /* DROP */
+  #drop-zone { flex:1; min-height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; cursor:pointer; position:relative; transition:background .2s; padding:32px; }
+  #drop-zone.drag-over { background:rgba(79,142,247,.07); }
+  #drop-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .drop-icon { width:52px; height:52px; border:2px dashed var(--border); border-radius:12px; display:flex; align-items:center; justify-content:center; transition:border-color .2s; }
+  #drop-zone.drag-over .drop-icon, #drop-zone:hover .drop-icon { border-color:var(--accent); }
+  #drop-zone.drag-over .drop-icon svg, #drop-zone:hover .drop-icon svg { color:var(--accent); }
+  .drop-icon svg { color:var(--muted); transition:color .2s; }
+  .drop-label { text-align:center; font-size:14px; color:var(--muted); line-height:1.6; }
+  .drop-label strong { display:block; color:var(--text); font-size:15px; margin-bottom:4px; }
+  .drop-hint { font-size:11px; color:#374151; margin-top:6px; }
+
+  /* STATUS */
+  .progress-wrap { height:3px; background:var(--border); }
+  .progress-bar { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); width:0%; transition:width .3s; }
+  #status-area { padding:11px 18px; border-top:1px solid var(--border); display:flex; align-items:center; gap:9px; font-size:13px; min-height:44px; }
+  .spinner { width:15px; height:15px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .st { color:var(--muted); }
+  .st.ok { color:var(--success); }
+  .st.err { color:var(--error); }
+
+  /* FILE LIST */
+  #file-info { display:none; padding:10px 18px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); word-break:break-all; }
+
+  /* OUTPUT */
+  .output-body { flex:1; display:flex; flex-direction:column; }
+  #result-box { flex:1; min-height:260px; font-family:var(--mono); font-size:13px; line-height:1.7; color:var(--text); background:transparent; border:none; resize:none; padding:18px; outline:none; overflow-y:auto; }
+  #result-box::placeholder { color:#374151; }
+
+  .action-bar { padding:11px 14px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .btn { display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--muted); transition:all .15s; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(79,142,247,.07); }
+  .btn:active { transform:scale(.97); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover { background:#3b7de8; border-color:#3b7de8; color:#fff; }
+  .btn:disabled { opacity:.35; cursor:not-allowed; pointer-events:none; }
+  .count-badge { margin-left:auto; font-size:12px; color:var(--muted); font-family:var(--mono); }
+
+  /* LOG */
+  #log-area { display:none; padding:10px 18px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:var(--mono); max-height:80px; overflow-y:auto; line-height:1.6; }
+
+  /* TOAST */
+  #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e2330; border:1px solid var(--border); color:var(--text); font-size:13px; padding:10px 20px; border-radius:8px; transition:transform .25s,opacity .25s; opacity:0; pointer-events:none; white-space:nowrap; }
+  #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Baobá Cosméticos</p>
+  <h1>Extrator de <span>Números de NF</span></h1>
+  <p class="subtitle">Arraste arquivos ZPL de etiquetas DANFE simplificado — múltiplos arquivos aceitos.</p>
+</header>
+
+<div class="grid">
+
+  <!-- ESQUERDO -->
+  <div class="panel">
+    <div class="panel-header"><span class="dot"></span>Arquivo ZPL</div>
+    <div id="drop-zone">
+      <input type="file" id="file-input" accept=".txt,.zpl" multiple />
+      <div class="drop-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+      </div>
+      <div class="drop-label">
+        <strong>Solte o arquivo aqui</strong>
+        ou clique para selecionar
+        <span class="drop-hint">.txt ou .zpl · múltiplos arquivos aceitos</span>
+      </div>
+    </div>
+    <div id="file-info"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <div id="status-area"><span class="st" id="status-text">Aguardando arquivo…</span></div>
+  </div>
+
+  <!-- DIREITO -->
+  <div class="panel">
+    <div class="panel-header"><span class="dot green"></span>Números de NF extraídos<span class="header-count" id="header-count"></span></div>
+    <div class="output-body">
+      <textarea id="result-box" readonly placeholder="Os números de NF aparecerão aqui após o processamento…"></textarea>
+    </div>
+    <div id="log-area"></div>
+    <div class="action-bar">
+      <button class="btn primary" id="btn-copy" onclick="copyResult()" disabled>
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copiar
+      </button>
+      <button class="btn" id="btn-csv" onclick="exportCSV()" disabled>
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        CSV
+      </button>
+      <button class="btn" id="btn-xlsx" onclick="exportXLSX()" disabled>
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        XLSX
+      </button>
+      <span class="count-badge" id="count-badge"></span>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ── DRAG & DROP ──────────────────────────────────────────────────────────────
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('drag-over'); }));
+['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('drag-over'); }));
+dropZone.addEventListener('drop', e => handleFiles([...e.dataTransfer.files]));
+fileInput.addEventListener('change', () => { handleFiles([...fileInput.files]); fileInput.value=''; });
+
+// ── GFA DECODER ───────────────────────────────────────────────────────────────
+function decodeGFA(raw, widthBytes) {
+  const data = raw.replace(/[\n\r ]/g, '');
+  let expanded = '';
+  let i = 0;
+  while (i < data.length) {
+    let repeat = 0;
+    while (i < data.length) {
+      const c = data[i];
+      if (c === 'z')                      { repeat += 400; i++; }
+      else if (c >= 'g' && c <= 'y')      { repeat += (c.charCodeAt(0) - 103 + 1) * 20; i++; }
+      else if (c >= 'G' && c <= 'Z')      { repeat += c.charCodeAt(0) - 71 + 1; i++; }
+      else break;
+    }
+    if (repeat === 0) repeat = 1;
+    if (i < data.length) { expanded += data[i].repeat(repeat); i++; }
+  }
+  const wh = widthBytes * 2;
+  const rows = [];
+  let cur = '', prev = '';
+  for (const c of expanded) {
+    if (c === ':') {
+      if (prev) { rows.push(prev); cur = ''; }
+    } else if (c === ',') {
+      cur = cur.padEnd(wh, '0');
+      if (cur) { prev = cur; rows.push(cur); cur = ''; }
+    } else {
+      cur += c;
+      if (cur.length === wh) { prev = cur; rows.push(cur); cur = ''; }
+    }
+  }
+  if (cur) rows.push(cur.padEnd(wh, '0'));
+  return rows;
+}
+
+function renderLabel(zpl) {
+  const m = zpl.match(/\^GFA,(\d+),(\d+),(\d+),([\s\S]*?)(?=\n\^[A-Z]|$)/);
+  if (!m) return null;
+  const width = parseInt(m[3]);
+  const rows  = decodeGFA(m[4].trim(), width);
+  if (!rows.length) return null;
+
+  const W = width * 8, H = rows.length;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, W, H);
+  const id = ctx.getImageData(0, 0, W, H);
+  const d  = id.data;
+
+  for (let y = 0; y < rows.length; y++) {
+    const row = rows[y];
+    for (let xb = 0; xb < row.length / 2; xb++) {
+      const byte = parseInt(row.slice(xb*2, xb*2+2), 16);
+      if (isNaN(byte)) continue;
+      for (let bit = 0; bit < 8; bit++) {
+        const x = xb * 8 + bit;
+        if (x >= W) continue;
+        if ((byte >> (7 - bit)) & 1) {
+          const p = (y * W + x) * 4;
+          d[p] = d[p+1] = d[p+2] = 0; d[p+3] = 255;
+        }
+      }
+    }
+  }
+  ctx.putImageData(id, 0, 0);
+  return canvas;
+}
+
+function cropAndScale(canvas) {
+  const cropH = Math.floor(canvas.height / 3);
+  const scale = 4;
+  const out = document.createElement('canvas');
+  out.width  = canvas.width * scale;
+  out.height = cropH * scale;
+  const ctx = out.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(canvas, 0, 0, canvas.width, cropH, 0, 0, out.width, out.height);
+  return out;
+}
+
+// ── TESSERACT ─────────────────────────────────────────────────────────────────
+let worker = null;
+
+async function initWorker() {
+  if (worker) return;
+  log('Carregando modelo OCR (primeira vez pode demorar ~20s)…');
+  setStatus('Carregando OCR…', true);
+  // API Tesseract.js v5 — sem workerPath/corePath customizados
+  worker = await Tesseract.createWorker('por');
+  log('OCR pronto.');
+}
+
+async function recognizeNF(canvas) {
+  const cropped = cropAndScale(canvas);
+  const { data: { text } } = await worker.recognize(cropped);
+  const patterns = [/[Nn][úu]mero[:\s]+(\d+)/, /Numero[:\s]+(\d+)/, /mero[:\s]+(\d+)/];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+// ── PROCESSAMENTO ─────────────────────────────────────────────────────────────
+let allNFs = [];
+
+async function handleFiles(files) {
+  if (!files.length) return;
+  allNFs = [];
+  document.getElementById('result-box').value = '';
+  document.getElementById('count-badge').textContent = '';
+  const hcReset = document.getElementById('header-count');
+  hcReset.textContent = '';
+  hcReset.classList.remove('visible');
+  setButtons(false);
+
+  const fi = document.getElementById('file-info');
+  fi.style.display = 'block';
+  fi.textContent = '📁 ' + files.map(f => f.name).join('  ·  ');
+
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = '0%';
+
+  try {
+    await initWorker();
+  } catch(e) {
+    setStatus('Erro ao carregar OCR: ' + e.message, false, true);
+    log('ERRO OCR: ' + e.message);
+    return;
+  }
+
+  // Conta total de etiquetas
+  const allContents = [];
+  let total = 0;
+  for (const file of files) {
+    const text  = await file.text();
+    const labels = [...text.matchAll(/\^XA[\s\S]*?\^XZ/g)].map(m => m[0]);
+    allContents.push({ name: file.name, labels });
+    total += labels.length;
+  }
+
+  if (total === 0) {
+    setStatus('Nenhuma etiqueta ZPL encontrada.', false, true);
+    return;
+  }
+
+  log(`${total} etiquetas encontradas em ${files.length} arquivo(s).`);
+  setStatus(`Processando 0 / ${total}…`, true);
+
+  let done = 0;
+  for (const { name, labels } of allContents) {
+    log(`Processando ${name} (${labels.length} etiquetas)…`);
+    for (const label of labels) {
+      const canvas = renderLabel(label);
+      if (canvas) {
+        try {
+          const nf = await recognizeNF(canvas);
+          if (nf) allNFs.push(nf);
+        } catch(e) {
+          log('Erro OCR etiqueta: ' + e.message);
+        }
+      }
+      done++;
+      bar.style.width = Math.round(done / total * 100) + '%';
+      setStatus(`Processando ${done} / ${total}…`, true);
+      // Yield para não travar a UI
+      if (done % 3 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  document.getElementById('result-box').value = allNFs.join(', ');
+  document.getElementById('count-badge').textContent = allNFs.length + ' NFs';
+  const hc = document.getElementById('header-count');
+  hc.textContent = '( ' + allNFs.length + ' )';
+  hc.classList.add('visible');
+  setStatus(`Concluído — ${allNFs.length} notas fiscais extraídas`, false, false, true);
+  log(`Extração concluída: ${allNFs.length} NFs.`);
+  bar.style.width = '100%';
+  setTimeout(() => bar.style.width = '0%', 2000);
+  setButtons(true);
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function setStatus(msg, spin=false, isErr=false, isOk=false) {
+  const a = document.getElementById('status-area');
+  a.innerHTML = '';
+  if (spin) { const s=document.createElement('div'); s.className='spinner'; a.appendChild(s); }
+  const t = document.createElement('span');
+  t.className = 'st' + (isErr?' err':isOk?' ok':'');
+  t.textContent = msg;
+  a.appendChild(t);
+}
+
+function log(msg) {
+  const el = document.getElementById('log-area');
+  el.style.display = 'block';
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+function setButtons(enabled) {
+  ['btn-copy','btn-csv','btn-xlsx'].forEach(id => {
+    document.getElementById(id).disabled = !enabled;
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── EXPORTAR ──────────────────────────────────────────────────────────────────
+function copyResult() {
+  const val = document.getElementById('result-box').value;
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(() => showToast('✓ Copiado!'));
+}
+
+function exportCSV() {
+  if (!allNFs.length) return;
+  const content = 'numero_nf\n' + allNFs.join('\n');
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' });
+  dlBlob(blob, 'numeros_nf.csv');
+  showToast('✓ CSV exportado!');
+}
+
+function exportXLSX() {
+  if (!allNFs.length) return;
+  if (typeof XLSX === 'undefined') { showToast('XLSX ainda carregando, tente de novo.'); return; }
+  const ws = XLSX.utils.aoa_to_sheet([['numero_nf'], ...allNFs.map(n => [n])]);
+  // Formata coluna como texto para não perder zeros à esquerda (se houver)
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let r = 1; r <= range.e.r; r++) {
+    const cell = ws[XLSX.utils.encode_cell({r, c:0})];
+    if (cell) cell.t = 's';
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'NFs');
+  XLSX.writeFile(wb, 'numeros_nf.xlsx');
+  showToast('✓ XLSX exportado!');
+}
+
+function dlBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
