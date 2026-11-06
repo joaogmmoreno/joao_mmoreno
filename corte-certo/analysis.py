@@ -121,6 +121,11 @@ RESULT_SCHEMA = _obj(
             _obj(
                 {
                     "nome": _str("Nome popular do corte, ex.: 'Crop texturizado com mid fade'"),
+                    "termo_busca": _str(
+                        "Termo curto e popular para achar fotos desse corte no Google Imagens, como as "
+                        "pessoas pesquisam (ex.: 'low fade side part', 'textured crop mid fade', "
+                        "'corte bob repicado')"
+                    ),
                     "compatibilidade": {"type": "integer", "description": "0 a 100"},
                     "por_que_funciona": _str("Ligação direta com a fisionomia e o estilo pedido"),
                     "manutencao": _enum(["baixa", "media", "alta"]),

@@ -1,6 +1,6 @@
 // Service worker: guarda a "casca" do app para abrir rápido e funcionar como app instalado.
 // A análise (/api/*) sempre vai para a rede.
-const VERSION = 'corte-certo-v1';
+const VERSION = 'corte-certo-v2';
 const SHELL = [
   '/',
   '/styles.css',

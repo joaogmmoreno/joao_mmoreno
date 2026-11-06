@@ -27,6 +27,7 @@ DEMO_RESULT = {
     "recomendacoes": [
         {
             "nome": "Side part clássico com low fade",
+            "termo_busca": "low fade side part",
             "compatibilidade": 94,
             "por_que_funciona": (
                 "As linhas retas conversam com o rosto quadrado e a risca lateral dá o ar alinhado do "
@@ -57,6 +58,7 @@ DEMO_RESULT = {
         },
         {
             "nome": "Ivy League",
+            "termo_busca": "ivy league haircut",
             "compatibilidade": 86,
             "por_que_funciona": "Mais curto e prático, mantém a elegância e valoriza a mandíbula.",
             "manutencao": "baixa",
@@ -79,6 +81,7 @@ DEMO_RESULT = {
         },
         {
             "nome": "Pompadour discreto",
+            "termo_busca": "short pompadour fade",
             "compatibilidade": 78,
             "por_que_funciona": (
                 "Dá altura que alonga levemente o terço superior curto; exige mais tempo para finalizar."

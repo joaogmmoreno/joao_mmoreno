@@ -567,6 +567,21 @@
     renderRec();
   }
 
+  // Busca de fotos do corte (abre fora do app). Usa o termo sugerido pela análise ou o nome do corte.
+  function photoLinks(rec) {
+    const termo = String(rec.termo_busca || rec.nome || '').trim();
+    const q = encodeURIComponent(`${termo} corte de cabelo ${state.publico === 'feminino' ? 'feminino' : 'masculino'}`);
+    return `
+      <div class="photo-links">
+        <a class="btn primary" target="_blank" rel="noopener" href="https://www.google.com/search?tbm=isch&q=${q}">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+          Ver fotos
+        </a>
+        <a class="btn secondary" target="_blank" rel="noopener" href="https://br.pinterest.com/search/pins/?q=${q}">Pinterest</a>
+        <small>As fotos são da internet: use como referência do estilo.</small>
+      </div>`;
+  }
+
   function renderRec() {
     const rec = state.result.recomendacoes[state.rec];
     if (!rec) return;
@@ -582,6 +597,7 @@
           <span class="tag">${esc(MANUT[rec.manutencao] || rec.manutencao)}</span>
           <span class="tag">Retocar a cada ${esc(rec.retorno_semanas)} semanas</span>
         </div>
+        ${photoLinks(rec)}
       </div>
 
       <div class="card barber">
