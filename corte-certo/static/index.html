@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1a17">
+<title>Corte Certo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="sil-front" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round">
+      <ellipse cx="60" cy="62" rx="30" ry="38"/>
+      <ellipse cx="29" cy="66" rx="5" ry="9"/>
+      <ellipse cx="91" cy="66" rx="5" ry="9"/>
+      <path d="M48 98 L48 116 M72 98 L72 116 M48 116 Q20 120 12 152 M72 116 Q100 120 108 152"/>
+    </g>
+    <g id="sil-side" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M70 22 C95 22 102 45 100 66 C99 80 94 90 86 96 L84 116"/>
+      <path d="M70 22 C50 22 38 34 36 50 L34 58 L26 72 L34 76 L34 82 L31 86 L34 90 L34 96 Q40 102 52 100 L58 104 L58 116"/>
+      <ellipse cx="74" cy="64" rx="6" ry="10"/>
+      <path d="M58 116 Q30 122 22 152 M84 116 Q100 120 106 152"/>
+    </g>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="9" cy="23" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="23" cy="23" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12.5 19.5 L24 4 M19.5 19.5 L8 4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    <span>Corte Certo</span>
+  </div>
+  <ol class="stepper" aria-label="Etapas">
+    <li data-step="1" class="active"><span>1</span>Fotos</li>
+    <li data-step="2"><span>2</span>Estilo</li>
+    <li data-step="3"><span>3</span>Resultado</li>
+  </ol>
+</header>
+
+<div id="demo-banner" class="demo-banner" hidden>
+  Modo demonstração: o resultado é um exemplo fixo. Configure a chave da API para análises reais.
+</div>
+
+<main>
+  <!-- PASSO 1: FOTOS -->
+  <section id="step-1" class="step active" aria-labelledby="t1">
+    <h1 id="t1">Vamos ver seu rosto por todos os ângulos</h1>
+    <p class="lead">Tire três fotos: perfil esquerdo, frente e perfil direito. Com elas analisamos formato do rosto, proporções, nuca e tipo de cabelo.</p>
+
+    <div class="photo-grid">
+      <label class="photo-slot" data-slot="esquerda">
+        <input type="file" accept="image/*" capture="user" hidden>
+        <div class="slot-empty">
+          <svg viewBox="0 0 120 160"><use href="#sil-side"/></svg>
+          <span class="slot-cta">Tirar foto</span>
+        </div>
+        <img alt="Prévia do perfil esquerdo" hidden>
+        <span class="slot-label">Perfil esquerdo</span>
+        <span class="slot-check" aria-hidden="true">✓</span>
+      </label>
+      <label class="photo-slot" data-slot="frente">
+        <input type="file" accept="image/*" capture="user" hidden>
+        <div class="slot-empty">
+          <svg viewBox="0 0 120 160"><use href="#sil-front"/></svg>
+          <span class="slot-cta">Tirar foto</span>
+        </div>
+        <img alt="Prévia da foto de frente" hidden>
+        <span class="slot-label">Frente</span>
+        <span class="slot-check" aria-hidden="true">✓</span>
+      </label>
+      <label class="photo-slot" data-slot="direita">
+        <input type="file" accept="image/*" capture="user" hidden>
+        <div class="slot-empty">
+          <svg viewBox="0 0 120 160"><g transform="translate(120 0) scale(-1 1)"><use href="#sil-side"/></g></svg>
+          <span class="slot-cta">Tirar foto</span>
+        </div>
+        <img alt="Prévia do perfil direito" hidden>
+        <span class="slot-label">Perfil direito</span>
+        <span class="slot-check" aria-hidden="true">✓</span>
+      </label>
+    </div>
+
+    <ul class="tips">
+      <li><b>Luz de frente</b>, de preferência natural, sem sombra forte no rosto.</li>
+      <li><b>Sem boné, óculos ou capuz</b>; cabelo como você usa no dia a dia.</li>
+      <li><b>Câmera na altura dos olhos</b>, mostrando da cabeça até os ombros.</li>
+      <li>Nos perfis, <b>vire o corpo inteiro</b> 90°, não só o rosto.</li>
+    </ul>
+
+    <div class="actions">
+      <button id="to-step-2" class="btn primary" disabled>Continuar</button>
+    </div>
+  </section>
+
+  <!-- PASSO 2: ESTILO -->
+  <section id="step-2" class="step" aria-labelledby="t2">
+    <h1 id="t2">Que imagem você quer passar?</h1>
+    <p class="lead">O estilo é escolha sua. A análise do rosto define a melhor forma de chegar nele.</p>
+
+    <div class="style-grid" role="radiogroup" aria-label="Estilo">
+      <button class="style-card" role="radio" aria-checked="false" data-value="classico">
+        <span class="style-icon">♜</span>
+        <strong>Clássico</strong>
+        <small>Alinhado, elegante, atemporal</small>
+      </button>
+      <button class="style-card" role="radio" aria-checked="false" data-value="despojado">
+        <span class="style-icon">〰</span>
+        <strong>Despojado</strong>
+        <small>Natural, com movimento</small>
+      </button>
+      <button class="style-card" role="radio" aria-checked="false" data-value="casual">
+        <span class="style-icon">☀</span>
+        <strong>Casual</strong>
+        <small>Prático para o dia a dia</small>
+      </button>
+      <button class="style-card" role="radio" aria-checked="false" data-value="moderno">
+        <span class="style-icon">◆</span>
+        <strong>Moderno</strong>
+        <small>Atual, com contraste e textura</small>
+      </button>
+    </div>
+
+    <fieldset class="chips" data-name="publico">
+      <legend>Corte</legend>
+      <button type="button" data-value="masculino" aria-pressed="true">Masculino</button>
+      <button type="button" data-value="feminino" aria-pressed="false">Feminino</button>
+    </fieldset>
+
+    <fieldset class="chips" data-name="comprimento">
+      <legend>Comprimento</legend>
+      <button type="button" data-value="curto" aria-pressed="false">Curto</button>
+      <button type="button" data-value="médio" aria-pressed="false">Médio</button>
+      <button type="button" data-value="longo" aria-pressed="false">Longo</button>
+      <button type="button" data-value="" aria-pressed="true">Tanto faz</button>
+    </fieldset>
+
+    <fieldset class="chips" data-name="manutencao">
+      <legend>Tempo para arrumar o cabelo</legend>
+      <button type="button" data-value="baixa (quase nada)" aria-pressed="false">Quase nada</button>
+      <button type="button" data-value="média (alguns minutos)" aria-pressed="true">Alguns minutos</button>
+      <button type="button" data-value="alta (gosto de finalizar)" aria-pressed="false">Gosto de finalizar</button>
+    </fieldset>
+
+    <label class="field">
+      <span>Algo mais? <em>(opcional)</em></span>
+      <textarea id="observacoes" rows="3" maxlength="400" placeholder="Ex.: trabalho em escritório, quero disfarçar as entradas, não gosto de máquina zero…"></textarea>
+    </label>
+
+    <div class="actions">
+      <button class="btn ghost" data-goto="1">Voltar</button>
+      <button id="analisar" class="btn primary" disabled>Analisar meu rosto</button>
+    </div>
+  </section>
+
+  <!-- CARREGANDO -->
+  <section id="step-loading" class="step" aria-live="polite">
+    <div class="loading">
+      <div class="scan">
+        <img id="loading-photo" alt="">
+        <div class="scan-line"></div>
+      </div>
+      <p id="loading-msg">Medindo proporções do rosto…</p>
+      <small>Leva cerca de 30 segundos.</small>
+    </div>
+  </section>
+
+  <!-- PASSO 3: RESULTADO -->
+  <section id="step-3" class="step" aria-labelledby="t3">
+    <div id="result"></div>
+    <div class="actions">
+      <button class="btn ghost" data-goto="2">Mudar estilo</button>
+      <button id="nova" class="btn primary">Nova análise</button>
+    </div>
+  </section>
+
+  <div id="error" class="error" role="alert" hidden></div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
