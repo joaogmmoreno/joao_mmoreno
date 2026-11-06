@@ -16,6 +16,24 @@ O cliente tira 3 fotos (perfil esquerdo, frente, perfil direito), escolhe a imag
 
 A análise é feita pelo Claude (modelo com visão) com um prompt de visagismo e saída em JSON estruturado.
 
+## Feito para celular
+
+O app é pensado primeiro para smartphone, seguindo as diretrizes da Apple (Human Interface
+Guidelines) e do Google (Material Design 3). As regras ficam em [`CLAUDE.md`](CLAUDE.md).
+
+- **Instalável (PWA)**: no Android aparece "Instalar app"; no iPhone, Compartilhar → "Adicionar à
+  Tela de Início". Abre em tela cheia, com ícone próprio, como um app.
+- **Câmera própria e guiada**: contorno da cabeça para encaixar em cada ângulo, instruções de como
+  virar o corpo, **timer com bipes** (para tirar o perfil sozinho), troca para a câmera traseira (para
+  alguém tirar a foto), revisão com "Repetir / Usar foto" e avanço automático para o próximo ângulo.
+  Também dá para escolher uma foto da galeria.
+- **Navegação de app**: barra com voltar e progresso, botão principal fixo embaixo (zona do polegar),
+  botão voltar do Android e gesto de voltar do iPhone funcionando.
+- **Compartilhar** a ficha do barbeiro pela folha nativa do sistema (WhatsApp, Mensagens etc.).
+- Vibração ao tocar, áreas seguras (notch e barra de gestos), modo escuro.
+
+Testado com emulação de iPhone SE, iPhone 13 e Pixel 7, incluindo a câmera.
+
 ## Estrutura
 
 ```
@@ -24,6 +42,10 @@ corte-certo/
 ├── analysis.py       # prompt de visagismo, schema da resposta e chamada ao Claude
 ├── demo.py           # resposta de exemplo (modo demonstração)
 ├── static/           # interface (HTML/CSS/JS puro, mobile-first)
+│   ├── manifest.json # PWA: nome, ícones, tela cheia
+│   ├── sw.js         # service worker (abre rápido, funciona como app)
+│   └── icons/
+├── CLAUDE.md         # regras de design mobile do projeto
 ├── requirements.txt
 └── Dockerfile
 ```
@@ -43,8 +65,9 @@ export ANTHROPIC_API_KEY=sk-ant-...
 python app.py
 ```
 
-Abra http://localhost:8000. Para testar a câmera no celular, o navegador exige HTTPS; o jeito mais
-rápido é publicar (abaixo) ou usar um túnel como `cloudflared tunnel --url http://localhost:8000`.
+Abra http://localhost:8000. Para testar no celular, a câmera e a instalação exigem HTTPS; o jeito
+mais rápido é publicar (abaixo) ou usar um túnel como `cloudflared tunnel --url http://localhost:8000`
+e abrir o endereço gerado no celular. Sem HTTPS, o app usa a câmera padrão do sistema como alternativa.
 
 ### Variáveis de ambiente
 
@@ -90,7 +113,13 @@ Custo estimado por análise com as configurações padrão: cerca de **US$ 0,05 
 ### Fase 3 — Para barbearias
 - Painel do barbeiro: ver a ficha do cliente antes de ele sentar na cadeira
 - Várias barbearias, cada uma com seus profissionais (multi-tenant)
-- Instalar como app no celular (PWA) e, se fizer sentido, publicar nas lojas
+
+### Lojas (App Store e Google Play)
+O app já funciona instalado como PWA. Para publicar nas lojas, o caminho mais curto é o
+**Capacitor**: ele empacota esta mesma interface num app iOS e Android nativo, sem reescrever o
+código, e dá acesso a recursos nativos (notificações push para lembrete de retorno, câmera nativa).
+Custos: conta Apple Developer (US$ 99/ano, exige um Mac para gerar o app iOS) e Google Play
+(US$ 25, uma vez).
 
 ### Cuidados (LGPD)
 Fotos do rosto são dados pessoais e podem ser dados sensíveis (biometria). Nesta fase nada é
